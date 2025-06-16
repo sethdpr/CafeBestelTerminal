@@ -1,0 +1,17 @@
+﻿<Window x:Class="CafeBestelTerminal.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        Title="Café Bestel Terminal" Height="500" Width="800">
+    <Grid>
+        <TabControl>
+            <TabItem Header="Bestellingen">
+                <!-- CRUD-lijst Bestellingen -->
+            </TabItem>
+            <TabItem Header="Producten">
+                <!-- CRUD-lijst Producten -->
+            </TabItem>
+            <TabItem Header="Klanten">
+                <!-- CRUD-lijst Klanten -->
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
