@@ -15,6 +15,11 @@ namespace CafeBestelTerminal.Data
         public DbSet<Bestelling> Bestellingen { get; set; }
         public DbSet<BestellingProduct> BestellingProducten { get; set; }
 
+        public AppDbContext()
+        {
+            Database.Migrate();
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite("Data Source=cafe.db");
 

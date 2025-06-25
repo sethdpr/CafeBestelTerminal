@@ -1,4 +1,5 @@
 ﻿using CafeBestelTerminal.Data;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Configuration;
 using System.Data;
 using System.Windows;
@@ -13,7 +14,6 @@ namespace CafeBestelTerminal
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            DbInitializer.Initialize();
         }
     }
 }
