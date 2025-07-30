@@ -39,7 +39,7 @@ namespace CafeBestelTerminal.ViewModels
         {
             LaadData();
             VoegToeCommand = new RelayCommand(VoegToe);
-            VerwijderCommand = new RelayCommand(Verwijder, () => GeselecteerdeBestelling != null);
+            VerwijderCommand = new RelayCommand(Verwijder);
             VoegProductToeCommand = new RelayCommand(VoegProductToe);
         }
 
@@ -61,8 +61,13 @@ namespace CafeBestelTerminal.ViewModels
             OnPropertyChanged(nameof(Producten));
         }
 
-        private void VoegProductToe()
+        private void VoegProductToe(object parameter = null)
         {
+            if (parameter is Product product)
+            {
+                GeselecteerdProduct = product;
+            }
+
             if (GeselecteerdProduct == null || AantalProduct <= 0)
             {
                 MessageBox.Show("Selecteer een product en geef een geldig aantal op.");
@@ -71,14 +76,24 @@ namespace CafeBestelTerminal.ViewModels
 
             var bestaand = GekozenProducten.FirstOrDefault(p => p.ProductId == GeselecteerdProduct.ProductId);
             if (bestaand != null)
+            {
                 bestaand.Aantal += AantalProduct;
+            }
             else
-                GekozenProducten.Add(new BestellingProduct { Product = GeselecteerdProduct, ProductId = GeselecteerdProduct.ProductId, Aantal = AantalProduct });
+            {
+                GekozenProducten.Add(new BestellingProduct
+                {
+                    Product = GeselecteerdProduct,
+                    ProductId = GeselecteerdProduct.ProductId,
+                    Aantal = AantalProduct
+                });
+            }
 
             AantalProduct = 1;
             OnPropertyChanged(nameof(GekozenProducten));
             OnPropertyChanged(nameof(AantalProduct));
         }
+
 
         private void VoegToe()
         {
@@ -92,7 +107,11 @@ namespace CafeBestelTerminal.ViewModels
                     Personeelslid = Personeelslid,
                     Datum = DateTime.Now,
                     KlantId = GeselecteerdeKlant?.KlantId ?? 0,
-                    BestellingProducten = GekozenProducten.ToList()
+                    BestellingProducten = GekozenProducten.Select(bp => new BestellingProduct
+                    {
+                        ProductId = bp.ProductId,
+                        Aantal = bp.Aantal
+                    }).ToList()
                 };
 
                 db.Bestellingen.Add(bestelling);
@@ -111,33 +130,63 @@ namespace CafeBestelTerminal.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Fout bij toevoegen bestelling: " + ex.Message);
+                MessageBox.Show($"Fout bij toevoegen bestelling:\n{ex.Message}\n\nDetails:\n{ex.InnerException?.Message}");
             }
         }
 
-        private void Verwijder()
+        private void Verwijder(object parameter)
         {
-            if (GeselecteerdeBestelling == null) return;
-
-            var confirm = MessageBox.Show("Weet je zeker dat je deze bestelling wil verwijderen?",
-                                          "Bevestigen", MessageBoxButton.YesNo);
-            if (confirm != MessageBoxResult.Yes) return;
-
-            try
+            if (parameter is BestellingProduct bp)
             {
-                using var db = new AppDbContext();
-                var b = db.Bestellingen.FirstOrDefault(b => b.BestellingId == GeselecteerdeBestelling.BestellingId);
-                if (b != null)
+                bp.Aantal--;
+                if (bp.Aantal <= 0)
+                    GekozenProducten.Remove(bp);
+
+                OnPropertyChanged(nameof(GekozenProducten));
+            }
+            else if (GeselecteerdeBestelling != null)
+            {
+                var confirm = MessageBox.Show("Weet je zeker dat je deze bestelling wil verwijderen?",
+                                              "Bevestigen", MessageBoxButton.YesNo);
+                if (confirm != MessageBoxResult.Yes) return;
+
+                try
                 {
-                    db.Bestellingen.Remove(b);
-                    db.SaveChanges();
-                    Bestellingen.Remove(GeselecteerdeBestelling);
+                    using var db = new AppDbContext();
+                    var b = db.Bestellingen.FirstOrDefault(b => b.BestellingId == GeselecteerdeBestelling.BestellingId);
+                    if (b != null)
+                    {
+                        db.Bestellingen.Remove(b);
+                        db.SaveChanges();
+                        Bestellingen.Remove(GeselecteerdeBestelling);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Fout bij verwijderen bestelling: " + ex.Message);
                 }
             }
-            catch (Exception ex)
+        }
+        public void ToonBestellingDetails()
+        {
+            var b = GeselecteerdeBestelling;
+            if (b == null) return;
+
+            var totaal = b.Totaalprijs.ToString("0.00");
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Naam: {b.Naam}");
+            sb.AppendLine($"Datum: {b.Datum}");
+            sb.AppendLine($"Personeelslid: {b.Personeelslid}");
+            sb.AppendLine($"Klant: {b.Klant?.Naam ?? "Onbekend"}");
+            sb.AppendLine($"Totaalprijs: € {totaal}");
+            sb.AppendLine("Producten:");
+            foreach (var bp in b.BestellingProducten)
             {
-                MessageBox.Show("Fout bij verwijderen bestelling: " + ex.Message);
+                sb.AppendLine($" - {bp.Aantal} x {bp.Product?.Naam} (€ {bp.Product?.Prijs.ToString("0.00")})");
             }
+
+            MessageBox.Show(sb.ToString(), "Bestelling Details");
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

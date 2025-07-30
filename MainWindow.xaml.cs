@@ -26,13 +26,21 @@ namespace CafeBestelTerminal
             InitializeComponent();
             DataContext = ViewModel;
         }
+        private void Bestelling_DubbelKlik(object sender, MouseButtonEventArgs e)
+        {
+            if (ViewModel.BestellingVM.GeselecteerdeBestelling != null)
+            {
+                ViewModel.BestellingVM.ToonBestellingDetails();
+            }
+        }
 
-        private void ToonDetails_Click(object sender, RoutedEventArgs e)
+        private void Product_Dubbelklik(object sender, MouseButtonEventArgs e)
         {
             if (ViewModel.ProductVM.GeselecteerdProduct != null)
             {
                 var p = ViewModel.ProductVM.GeselecteerdProduct;
-                MessageBox.Show($"Naam: {p.Naam}\nPrijs: €{p.Prijs}\nDatum toegevoegd: {p.DatumToegevoegd.ToShortDateString()}");
+                MessageBox.Show($"Naam: {p.Naam}\nPrijs: €{p.Prijs:F2}\nDatum toegevoegd: {p.DatumToegevoegd.ToShortDateString()}",
+                                "Productdetails");
             }
         }
 
@@ -44,31 +52,45 @@ namespace CafeBestelTerminal
             }
         }
 
-        private void ToonBestellingen_Click(object sender, RoutedEventArgs e)
-        {
-            if (ViewModel.KlantVM.GeselecteerdeKlant != null)
-            {
-                ToonBestellingenVanKlant(ViewModel.KlantVM.GeselecteerdeKlant);
-            }
-        }
-
         private void ToonBestellingenVanKlant(Klant klant)
         {
             using var db = new AppDbContext();
-            var klantMetBestellingen = db.Klanten
+
+            var klantInfo = db.Klanten
                 .Where(k => k.KlantId == klant.KlantId)
                 .Select(k => new
                 {
                     k.Naam,
-                    Bestellingen = k.Bestellingen.Select(b => b.Naam + " op " + b.Datum.ToShortDateString())
-                }).FirstOrDefault();
+                    k.Beschrijving,
+                    Bestellingen = k.Bestellingen
+                        .OrderByDescending(b => b.Datum)
+                        .Select(b => $"{b.Naam} op {b.Datum.ToShortDateString()}")
+                        .ToList()
+                })
+                .FirstOrDefault();
 
-            if (klantMetBestellingen != null)
+            if (klantInfo == null)
             {
-                var bericht = $"Bestellingen voor {klantMetBestellingen.Naam}:\n" +
-                              string.Join("\n", klantMetBestellingen.Bestellingen);
-                MessageBox.Show(bericht, "Bestellingen");
+                MessageBox.Show("Klant niet gevonden.", "Bestellingen");
+                return;
             }
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Klant: {klantInfo.Naam}");
+            sb.AppendLine($"Beschrijving: {klantInfo.Beschrijving}");
+            sb.AppendLine();
+
+            if (klantInfo.Bestellingen.Any())
+            {
+                sb.AppendLine("Bestellingen:");
+                sb.AppendLine(string.Join(Environment.NewLine, klantInfo.Bestellingen));
+            }
+            else
+            {
+                sb.AppendLine("Geen bestellingen gevonden.");
+            }
+
+            MessageBox.Show(sb.ToString(), "Bestellingen");
         }
     }
 }

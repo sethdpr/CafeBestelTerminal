@@ -11,73 +11,97 @@
             <Setter Property="BorderBrush" Value="LightGray"/>
         </Style>
     </Window.Resources>
+
     <Grid>
         <TabControl>
 
-            <!-- BESTELLINGEN -->
+            <!-- =======================
+                 BESTELLINGEN
+                 ======================= -->
             <TabItem Header="Bestellingen">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="2*" />
-                        <RowDefinition Height="3*" />
+                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="3*"/>
                     </Grid.RowDefinitions>
 
                     <!-- Overzicht -->
-                    <ListBox ItemsSource="{Binding BestellingVM.Bestellingen}" 
-                             SelectedItem="{Binding BestellingVM.GeselecteerdeBestelling}" 
-                             DisplayMemberPath="Naam" Grid.Row="0">
+                    <ListBox ItemsSource="{Binding BestellingVM.Bestellingen}"
+                             SelectedItem="{Binding BestellingVM.GeselecteerdeBestelling, Mode=TwoWay}">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <EventSetter Event="MouseDoubleClick" Handler="Bestelling_DubbelKlik"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Naam}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+
                         <ListBox.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Verwijder Bestelling" Command="{Binding BestellingVM.VerwijderCommand}" />
-                                <MenuItem Header="Toon Totaalprijs" Command="{Binding BestellingVM.VerwijderCommand}" />
+                                <MenuItem Header="Verwijder Bestelling"
+                                          Command="{Binding BestellingVM.VerwijderCommand}"/>
                             </ContextMenu>
                         </ListBox.ContextMenu>
                     </ListBox>
 
                     <!-- Formulier -->
                     <StackPanel Grid.Row="1" Margin="10" Orientation="Vertical" HorizontalAlignment="Left" Width="300">
-                        <TextBlock Text="Naam van bestelling:" />
-                        <TextBox Text="{Binding BestellingVM.NieuweNaam}" />
+                        <TextBlock Text="Naam van bestelling:"/>
+                        <TextBox Text="{Binding BestellingVM.NieuweNaam}"/>
 
-                        <TextBlock Text="Personeelslid:" />
-                        <TextBox Text="{Binding BestellingVM.Personeelslid}" />
+                        <TextBlock Text="Personeelslid:"/>
+                        <TextBox Text="{Binding BestellingVM.Personeelslid}"/>
 
-                        <TextBlock Text="Klant:" />
-                        <ComboBox ItemsSource="{Binding KlantVM.Klanten}" 
-                                  DisplayMemberPath="Naam" 
-                                  SelectedItem="{Binding BestellingVM.GeselecteerdeKlant}" />
+                        <TextBlock Text="Klant:"/>
+                        <ComboBox ItemsSource="{Binding KlantVM.Klanten}"
+                                  DisplayMemberPath="Naam"
+                                  SelectedItem="{Binding BestellingVM.GeselecteerdeKlant}"/>
 
                         <TextBlock Text="Product toevoegen:" Margin="0,10,0,0"/>
                         <StackPanel Orientation="Horizontal">
-                            <ComboBox ItemsSource="{Binding ProductVM.Producten}" 
-                                      DisplayMemberPath="Naam" 
-                                      SelectedItem="{Binding BestellingVM.GeselecteerdProduct}" Width="150" />
-                            <TextBox Text="{Binding BestellingVM.AantalProduct}" Width="40" Margin="5,0,0,0" />
-                            <Button Content="+" Command="{Binding BestellingVM.VoegProductToeCommand}" Width="30" Margin="5,0,0,0" />
+                            <ComboBox ItemsSource="{Binding ProductVM.Producten}"
+                                      DisplayMemberPath="Naam"
+                                      SelectedItem="{Binding BestellingVM.GeselecteerdProduct}"
+                                      Width="150"/>
+                            <TextBox Text="{Binding BestellingVM.AantalProduct}" Width="40" Margin="5,0,0,0"/>
+                            <Button Content="+" Command="{Binding BestellingVM.VoegProductToeCommand}" Width="30" Margin="5,0,0,0"/>
                         </StackPanel>
 
                         <TextBlock Text="Toegevoegde producten:" Margin="0,10,0,0"/>
                         <ItemsControl ItemsSource="{Binding BestellingVM.GekozenProducten}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Product.Naam}" />
-                                        <TextBlock Text=" x " />
-                                        <TextBlock Text="{Binding Aantal}" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <TextBlock Text="{Binding Product.Naam}" Width="120"/>
+                                        <Button Content="-" Width="20"
+                                                Command="{Binding DataContext.BestellingVM.VerwijderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"/>
+                                        <TextBlock Text="{Binding Aantal}" Width="20" TextAlignment="Center"/>
+                                        <Button Content="+" Width="20"
+                                                Command="{Binding DataContext.BestellingVM.VoegProductToeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding Product}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <Button Content="Voeg bestelling toe" Command="{Binding BestellingVM.VoegToeCommand}" Margin="0,10,0,0" />
+                        <Button Content="Voeg bestelling toe"
+                                Command="{Binding BestellingVM.VoegToeCommand}"
+                                Margin="0,10,0,0"/>
 
                         <TextBlock Text="Totaalprijs:" FontWeight="Bold" Margin="0,10,0,0"/>
-                        <TextBlock Text="{Binding BestellingVM.GeselecteerdeBestelling.Totaalprijs, StringFormat=€{0:F2}}" />
+                        <TextBlock Text="{Binding BestellingVM.GeselecteerdeBestelling.Totaalprijs, StringFormat=€{0:F2}}"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
 
-            <!-- PRODUCTEN -->
+            <!-- =======================
+                 PRODUCTEN
+                 ======================= -->
             <TabItem Header="Producten">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
@@ -87,27 +111,38 @@
 
                     <!-- Toevoegen van nieuw product -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="Naam" FontWeight="Bold" />
-                        <TextBox Width="150" Margin="0,0,10,0" Text="{Binding ProductVM.NieuweNaam, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Text="Prijs" FontWeight="Bold" />
-                        <TextBox Width="100" Margin="0,0,10,0" Text="{Binding ProductVM.NieuwePrijs, UpdateSourceTrigger=PropertyChanged}" />
-                        <Button Content="Voeg toe" Command="{Binding ProductVM.VoegToeCommand}" />
+                        <TextBlock Text="Naam" FontWeight="Bold"/>
+                        <TextBox Width="150" Margin="0,0,10,0"
+                                 Text="{Binding ProductVM.NieuweNaam, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Text="Prijs" FontWeight="Bold"/>
+                        <TextBox Width="100" Margin="0,0,10,0"
+                                 Text="{Binding ProductVM.NieuwePrijs, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Content="Voeg toe" Command="{Binding ProductVM.VoegToeCommand}"/>
                     </StackPanel>
 
                     <!-- Productenlijst -->
-                    <ListBox Grid.Row="1" ItemsSource="{Binding ProductVM.Producten}" 
-                             SelectedItem="{Binding ProductVM.GeselecteerdProduct}" DisplayMemberPath="Naam">
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding ProductVM.Producten}"
+                             SelectedItem="{Binding ProductVM.GeselecteerdProduct}"
+                             DisplayMemberPath="Naam">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <EventSetter Event="MouseDoubleClick" Handler="Product_Dubbelklik"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
                         <ListBox.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Verwijder" Command="{Binding ProductVM.VerwijderCommand}" />
-                                <MenuItem Header="Details" Click="ToonDetails_Click"/>
+                                <MenuItem Header="Verwijder" Command="{Binding ProductVM.VerwijderCommand}"/>
                             </ContextMenu>
                         </ListBox.ContextMenu>
                     </ListBox>
                 </Grid>
             </TabItem>
 
-            <!-- KLANTEN -->
+            <!-- =======================
+                 KLANTEN
+                 ======================= -->
             <TabItem Header="Klanten">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
@@ -117,27 +152,34 @@
 
                     <!-- Nieuw klant toevoegen -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="Naam" FontWeight="Bold" />
-                        <TextBox Width="150" Margin="0,0,10,0" Text="{Binding KlantVM.NieuweNaam, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Text="Beschrijving" FontWeight="Bold" />
-                        <TextBox Width="200" Margin="0,0,10,0" Text="{Binding KlantVM.NieuweBeschrijving, UpdateSourceTrigger=PropertyChanged}" />
-                        <Button Content="Voeg toe" Command="{Binding KlantVM.VoegToeCommand}" />
+                        <TextBlock Text="Naam" FontWeight="Bold"/>
+                        <TextBox Width="150" Margin="0,0,10,0"
+                                 Text="{Binding KlantVM.NieuweNaam, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Text="Beschrijving" FontWeight="Bold"/>
+                        <TextBox Width="200" Margin="0,0,10,0"
+                                 Text="{Binding KlantVM.NieuweBeschrijving, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Content="Voeg toe" Command="{Binding KlantVM.VoegToeCommand}"/>
                     </StackPanel>
 
                     <!-- Klantenlijst -->
-                    <ListBox Grid.Row="1" ItemsSource="{Binding KlantVM.Klanten}" 
-                             SelectedItem="{Binding KlantVM.GeselecteerdeKlant}" 
-                             DisplayMemberPath="Naam" MouseDoubleClick="Klant_Dubbelklik">
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding KlantVM.Klanten}"
+                             SelectedItem="{Binding KlantVM.GeselecteerdeKlant}"
+                             DisplayMemberPath="Naam">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <EventSetter Event="MouseDoubleClick" Handler="Klant_Dubbelklik"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+
                         <ListBox.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Verwijder" Command="{Binding KlantVM.VerwijderCommand}" />
-                                <MenuItem Header="Toon Bestellingen" Click="ToonBestellingen_Click" />
+                                <MenuItem Header="Verwijder" Command="{Binding KlantVM.VerwijderCommand}"/>
                             </ContextMenu>
                         </ListBox.ContextMenu>
                     </ListBox>
                 </Grid>
             </TabItem>
-
         </TabControl>
     </Grid>
 </Window>
