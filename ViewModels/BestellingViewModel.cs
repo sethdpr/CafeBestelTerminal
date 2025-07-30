@@ -93,8 +93,17 @@ namespace CafeBestelTerminal.ViewModels
             OnPropertyChanged(nameof(GekozenProducten));
             OnPropertyChanged(nameof(AantalProduct));
         }
+        private void Verwijder(object parameter)
+        {
+            if (parameter is BestellingProduct bp)
+            {
+                bp.Aantal--;
+                if (bp.Aantal <= 0)
+                    GekozenProducten.Remove(bp);
 
-
+                OnPropertyChanged(nameof(GekozenProducten));
+            }
+        }
         private void VoegToe()
         {
             try
@@ -131,40 +140,6 @@ namespace CafeBestelTerminal.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Fout bij toevoegen bestelling:\n{ex.Message}\n\nDetails:\n{ex.InnerException?.Message}");
-            }
-        }
-
-        private void Verwijder(object parameter)
-        {
-            if (parameter is BestellingProduct bp)
-            {
-                bp.Aantal--;
-                if (bp.Aantal <= 0)
-                    GekozenProducten.Remove(bp);
-
-                OnPropertyChanged(nameof(GekozenProducten));
-            }
-            else if (GeselecteerdeBestelling != null)
-            {
-                var confirm = MessageBox.Show("Weet je zeker dat je deze bestelling wil verwijderen?",
-                                              "Bevestigen", MessageBoxButton.YesNo);
-                if (confirm != MessageBoxResult.Yes) return;
-
-                try
-                {
-                    using var db = new AppDbContext();
-                    var b = db.Bestellingen.FirstOrDefault(b => b.BestellingId == GeselecteerdeBestelling.BestellingId);
-                    if (b != null)
-                    {
-                        db.Bestellingen.Remove(b);
-                        db.SaveChanges();
-                        Bestellingen.Remove(GeselecteerdeBestelling);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Fout bij verwijderen bestelling: " + ex.Message);
-                }
             }
         }
         public void ToonBestellingDetails()
