@@ -33,6 +33,7 @@ namespace CafeBestelTerminal.ViewModels
         public ICommand VoegToeCommand { get; }
         public ICommand VerwijderCommand { get; }
         public ICommand VoegProductToeCommand { get; }
+        public ICommand VerwijderProductCommand { get; }
 
 
         public BestellingViewModel()
@@ -41,6 +42,7 @@ namespace CafeBestelTerminal.ViewModels
             VoegToeCommand = new RelayCommand(VoegToe);
             VerwijderCommand = new RelayCommand(Verwijder);
             VoegProductToeCommand = new RelayCommand(VoegProductToe);
+            VerwijderProductCommand = new RelayCommand(VerwijderProduct);
         }
 
         private void LaadData()
@@ -93,7 +95,7 @@ namespace CafeBestelTerminal.ViewModels
             OnPropertyChanged(nameof(GekozenProducten));
             OnPropertyChanged(nameof(AantalProduct));
         }
-        private void Verwijder(object parameter)
+        private void VerwijderProduct(object parameter)
         {
             if (parameter is BestellingProduct bp)
             {
@@ -102,6 +104,28 @@ namespace CafeBestelTerminal.ViewModels
                     GekozenProducten.Remove(bp);
 
                 OnPropertyChanged(nameof(GekozenProducten));
+            }
+        }
+
+        private void Verwijder()
+        {
+            if (GeselecteerdeBestelling == null) return;
+            var bevestiging = MessageBox.Show($"Weet je zeker dat je de bestelling '{GeselecteerdeBestelling.Naam}' wilt verwijderen?",
+                                              "Bevestig verwijdering", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (bevestiging != MessageBoxResult.Yes) return;
+            try
+            {
+                using var db = new AppDbContext();
+                db.Bestellingen.Remove(GeselecteerdeBestelling);
+                db.SaveChanges();
+                Bestellingen.Remove(GeselecteerdeBestelling);
+                GeselecteerdeBestelling = null;
+                OnPropertyChanged(nameof(GeselecteerdeBestelling));
+                MessageBox.Show("Bestelling verwijderd!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Fout bij verwijderen bestelling:\n{ex.Message}\n\nDetails:\n{ex.InnerException?.Message}");
             }
         }
         private void VoegToe()
@@ -134,6 +158,7 @@ namespace CafeBestelTerminal.ViewModels
                 OnPropertyChanged(nameof(NieuweNaam));
                 OnPropertyChanged(nameof(Personeelslid));
                 OnPropertyChanged(nameof(GekozenProducten));
+                LaadData();
 
                 MessageBox.Show("Bestelling toegevoegd!");
             }

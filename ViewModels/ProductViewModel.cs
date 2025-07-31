@@ -71,6 +71,10 @@ namespace CafeBestelTerminal.ViewModels
         {
             if (GeselecteerdProduct == null) return;
 
+            var bevestiging = MessageBox.Show($"Weet je zeker dat je {GeselecteerdProduct.Naam} wilt verwijderen?",
+                                              "Bevestig verwijdering", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (bevestiging != MessageBoxResult.Yes) return;
+
             try
             {
                 using var db = new AppDbContext();
