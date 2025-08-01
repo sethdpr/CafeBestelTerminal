@@ -63,6 +63,8 @@ namespace CafeBestelTerminal
             using var db = new AppDbContext();
             var klant = db.Klanten
                 .Include(k => k.Bestellingen)
+                    .ThenInclude(b => b.BestellingProducten)
+                        .ThenInclude(bp => bp.Product)
                 .FirstOrDefault(k => k.KlantId == geselecteerdeKlant.KlantId);
 
             if (klant != null)
